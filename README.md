@@ -8,6 +8,8 @@ A minimal Vue + Vite full-stack framework built around [doofpi](https://www.npmj
 
 File-based pages, SSR or SPA, a built-in doofpi server and a doofpi client with four fetch modes.
 
+[![npm version](https://img.shields.io/npm/v/noofpi.svg)](https://www.npmjs.com/package/noofpi) [![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
 </div>
 
 ## Getting started
