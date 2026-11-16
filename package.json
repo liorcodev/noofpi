@@ -1,0 +1,103 @@
+{
+  "name": "noofpi",
+  "version": "1.0.0",
+  "description": "A minimal Vue + Vite full-stack framework built around doofpi",
+  "license": "MIT",
+  "author": "Lior Cohen",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liorcodev/noofpi.git"
+  },
+  "homepage": "https://liorcodev.github.io/noofpi-docs/",
+  "bugs": {
+    "url": "https://github.com/liorcodev/noofpi/issues"
+  },
+  "keywords": [
+    "vue",
+    "vite",
+    "ssr",
+    "framework",
+    "full-stack",
+    "doofpi"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "bin": {
+    "noofpi": "./bin/noofpi.mjs"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./runtime/*": {
+      "types": "./dist/runtime/*.d.ts",
+      "default": "./dist/runtime/*.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "default": "./dist/server/index.js"
+    },
+    "./server/node": {
+      "default": "./dist/server/node.js"
+    },
+    "./server/bun": {
+      "default": "./dist/server/bun.js"
+    },
+    "./client": {
+      "types": "./client.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "bin",
+    "client.d.ts",
+    "LICENSE"
+  ],
+  "workspaces": [
+    "playground"
+  ],
+  "scripts": {
+    "format": "prettier --write .",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build && bun run test"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@vitejs/plugin-vue": "^6.0.11",
+    "jiti": "^2.7.0",
+    "sharp": "^0.35.5",
+    "tailwindcss": "^4.3.5",
+    "unplugin-auto-import": "^21.1.0",
+    "unplugin-vue-components": "^32.1.0",
+    "vite": "^8.3.8",
+    "vue": "^3.5.45",
+    "vue-router": "^5.5.1"
+  },
+  "peerDependencies": {
+    "doofpi": ">=1.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "doofpi": "^1.3.1",
+    "zod": "^4.6.7",
+    "prettier": "^3.10.1",
+    "tsup": "^9.0.0",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.12"
+  }
+}

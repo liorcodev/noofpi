@@ -1,0 +1,14 @@
+{
+  "name": "noofpi-playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "noofpi dev",
+    "build": "noofpi build",
+    "start": "noofpi start"
+  },
+  "dependencies": {
+    "noofpi": "workspace:*",
+    "vue": "^3.5.45"
+  }
+}
