@@ -10,6 +10,7 @@ import type { ServerModule } from "../server/types";
 import { resolveFonts } from "../fonts";
 import { createViteConfig } from "./config";
 import { DEV_ENTRY, resolveCss } from "./plugin";
+import { startPlatformProxy } from "./platform";
 import { htmlTemplate } from "./template";
 
 export async function startDev(
@@ -49,6 +50,8 @@ export async function startDev(
     return url + "?direct";
   });
 
+  const platform = await startPlatformProxy(root, config);
+
   const handler = createHandler({
     load: () =>
       vite.ssrLoadModule("virtual:noofpi/server") as Promise<ServerModule>,
@@ -63,7 +66,7 @@ export async function startDev(
   httpServer.on("request", (req, res) => {
     // Vite serves modules, assets and HMR; everything else is the noofpi server
     vite.middlewares(req, res, () => {
-      handler(toWebRequest(req)).then(
+      handler(toWebRequest(req), platform?.env).then(
         (response) => sendWebResponse(res, response),
         (error) => {
           console.error(error);
@@ -80,7 +83,7 @@ export async function startDev(
   vite.ssrLoadModule("virtual:noofpi/server").catch(() => {});
   for (const url of stylesheets) vite.warmupRequest(url).catch(() => {});
   const close = () =>
-    vite.close().then(() => {
+    Promise.all([vite.close(), platform?.dispose()]).then(() => {
       httpServer.closeAllConnections();
       httpServer.close();
     });

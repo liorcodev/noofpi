@@ -2,6 +2,12 @@
 
 All notable changes to noofpi are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-11-17
+
+### Added
+
+- `noofpi dev` emulates Cloudflare bindings (vars, KV, D1, R2, ...) with Wrangler's `getPlatformProxy` for the `cloudflare-*` presets, so `env` is available in server middleware and doofpi endpoints. Needs `wrangler` installed.
+
 ## [1.0.0] - 2026-11-16
 
 ### Added
