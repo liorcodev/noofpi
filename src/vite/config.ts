@@ -1,4 +1,5 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import { mergeConfig, type InlineConfig } from "vite";
@@ -36,9 +37,18 @@ export function createViteConfig(
       imagesPlugin(config.images),
       noofpiPlugin({ root, config, css: resolveCss(root, config, fonts) }),
     ],
-    resolve: { dedupe: ["vue", "vue-router"] },
+    resolve: {
+      dedupe: ["vue", "vue-router"],
+      // vue-router reports through `nostics`; the stub keeps the console free of its warnings
+      alias: {
+        nostics: fileURLToPath(
+          new URL("./runtime/silent-diagnostics.js", import.meta.url),
+        ),
+      },
+    },
     // noofpi's runtime imports virtual modules, so it must go through vite instead of being externalized
-    ssr: { noExternal: ["noofpi"] },
+    // vue-router too: its `nostics` import has to go through the alias above
+    ssr: { noExternal: ["noofpi", "vue-router"] },
     // Subpaths must be listed too: a prebundled `noofpi/runtime` would be a second copy of the runtime modules
     // (different injection keys than the ones `createNoofpiApp` provides)
     optimizeDeps: {

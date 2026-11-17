@@ -12,6 +12,7 @@ export default defineConfig({
     "runtime/default-app": "src/runtime/default-app.ts",
     "runtime/entry-client": "src/runtime/entry-client.ts",
     "runtime/entry-server": "src/runtime/entry-server.ts",
+    "runtime/silent-diagnostics": "src/runtime/silent-diagnostics.ts",
   },
   format: ["esm"],
   platform: "node",

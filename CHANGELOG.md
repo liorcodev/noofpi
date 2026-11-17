@@ -2,6 +2,12 @@
 
 All notable changes to noofpi are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] - 2026-11-17
+
+### Changed
+
+- vue-router's console diagnostics (for example `[VUE_ROUTER_R0004] No match found for location with path ...` on an unknown URL) are silenced. `nostics`, which vue-router reports through, is aliased to a no-op module in the Vite config, and `vue-router` is bundled for SSR so the alias applies there too.
+
 ## [1.1.0] - 2026-11-17
 
 ### Added
