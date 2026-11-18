@@ -1,6 +1,6 @@
 {
   "name": "noofpi",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "A minimal Vue + Vite full-stack framework built around doofpi",
   "license": "MIT",
   "author": "Lior Cohen",

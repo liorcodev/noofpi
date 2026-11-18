@@ -16,17 +16,65 @@ export const PROXY_PREFIX = "/_noofpi/proxy";
 export type Routes = Parameters<Doofpi["routes"]>[0];
 
 /**
- * Filled in by the `.noofpi/doofpi.d.ts` that noofpi generates from `server/doofpi.ts` (its `routes` export), so
- * clients are typed without a generic. Augment it yourself to register routes from elsewhere.
+ * Registers the routes types of the doofpi clients, so they are typed without a generic. Augment it yourself:
+ * - `remoteRoutes`: the routes of the remote API, used by `dfetch`, `pfetch` and `sfetch`
+ * - `localRoutes`: the routes of `server/doofpi.ts`, used by `lfetch`. Filled in by the `.noofpi/doofpi.d.ts` that
+ *   noofpi generates (its `routes` export), so you rarely set it
+ * - `routes`: used by every mode that has no `localRoutes` / `remoteRoutes`
+ * - `defaultFetch`: the `doofpi.fetch` mode of the config (also filled in by `.noofpi/doofpi.d.ts`). A call without
+ *   `{ mode }` is typed for it, so it cannot see `routeRules[...].fetch`: pass `{ mode }` where a page differs
  */
 export interface Register {}
 
-/** The routes registered through {@link Register}, `any` when there are none */
+/** The `routes` registered through {@link Register}, `any` when there are none */
 export type RegisteredRoutes = Register extends {
   routes: infer R extends Routes;
 }
   ? R
   : any;
+
+type LocalOnly = Register extends { localRoutes: infer R extends Routes }
+  ? R
+  : never;
+type RemoteOnly = Register extends { remoteRoutes: infer R extends Routes }
+  ? R
+  : never;
+type OrRoutes<R> = [R] extends [never] ? RegisteredRoutes : R;
+
+/** The `localRoutes` registered through {@link Register}, else {@link RegisteredRoutes} */
+export type RegisteredLocalRoutes = OrRoutes<LocalOnly>;
+/** The `remoteRoutes` registered through {@link Register}, else {@link RegisteredRoutes} */
+export type RegisteredRemoteRoutes = OrRoutes<RemoteOnly>;
+
+type DefaultFetch = Register extends { defaultFetch: infer F extends FetchMode }
+  ? F
+  : undefined;
+type REMOTE_MODES = "dfetch" | "pfetch" | "sfetch";
+
+/** Without a default mode: `routes`, else the remote routes, else the local ones, else `any` */
+type UnmodedRoutes = Register extends { routes: infer R extends Routes }
+  ? R
+  : [RemoteOnly] extends [never]
+    ? [LocalOnly] extends [never]
+      ? any
+      : LocalOnly
+    : RemoteOnly;
+
+/**
+ * The routes of a fetch mode: `lfetch` -> local, the other modes -> remote. `undefined` (or a mode that is not a single
+ * literal) is the `defaultFetch` mode of the config.
+ */
+export type RoutesForMode<M extends FetchMode | undefined = undefined> = [
+  M,
+] extends ["lfetch"]
+  ? RegisteredLocalRoutes
+  : [M] extends [REMOTE_MODES]
+    ? RegisteredRemoteRoutes
+    : [DefaultFetch] extends ["lfetch"]
+      ? RegisteredLocalRoutes
+      : [DefaultFetch] extends [REMOTE_MODES]
+        ? RegisteredRemoteRoutes
+        : UnmodedRoutes;
 
 export type DoofpiClient<R extends Routes = RegisteredRoutes> = ReturnType<
   typeof createClient<R>
@@ -52,21 +100,25 @@ export const DOOFPI_KEY: InjectionKey<DoofpiClients> = Symbol("noofpi:doofpi");
  * The doofpi client for the `doofpi.fetch` mode that applies to the current page (`routeRules[...].fetch` or the global
  * one), or for an explicit `{ mode }` (e.g. `useDoofpi({ mode: "sfetch" })`, which must be enabled in the config).
  * Call it inside `setup()` (or `app.runWithContext`); layouts and `app.vue` are set up once, so they keep the
- * client of the first page. Typed by the `routes` export of `server/doofpi.ts`; pass a routes type to override it:
- * `useDoofpi<OtherRoutes>()`.
+ * client of the first page. Typed by the `Register` routes of the mode (`localRoutes` for `lfetch`, `remoteRoutes` for
+ * the others, see {@link Register}); pass a routes type to override it: `useDoofpi<OtherRoutes>()`.
  */
-export function useDoofpi<R extends Routes = RegisteredRoutes>(
+export function useDoofpi<M extends FetchMode | undefined = undefined>(
+  options?: UseDoofpiOptions & { mode?: M },
+): DoofpiClient<RoutesForMode<M>>;
+export function useDoofpi<R extends Routes>(
   options?: UseDoofpiOptions,
-): DoofpiClient<R> {
+): DoofpiClient<R>;
+export function useDoofpi(options?: UseDoofpiOptions): DoofpiClient<any> {
   const clients = inject(DOOFPI_KEY, null);
   if (!clients)
     throw new Error(
       "[noofpi] useDoofpi() must be called inside setup() or app.runWithContext()",
     );
-  if (options?.mode) return clients.forMode(options.mode) as DoofpiClient<R>;
+  if (options?.mode) return clients.forMode(options.mode);
   // Without a router (plain Vue apps, tests) there are no route rules to apply
   const path = clients.pending ?? inject(routeLocationKey, null)?.path ?? "/";
-  return clients.forPath(path) as DoofpiClient<R>;
+  return clients.forPath(path);
 }
 
 export interface DoofpiClientConfig {

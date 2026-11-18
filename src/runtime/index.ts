@@ -90,6 +90,9 @@ export type {
   DoofpiClientConfig,
   DoofpiClientContext,
   Register,
+  RegisteredLocalRoutes,
+  RegisteredRemoteRoutes,
   RegisteredRoutes,
+  RoutesForMode,
   UseDoofpiOptions,
 } from "./doofpi-client";

@@ -22,12 +22,16 @@ describe("writeDoofpiTypes", () => {
       path.join(root, "server/doofpi.ts"),
       "export const routes = {};",
     );
-    writeDoofpiTypes(root);
+    writeDoofpiTypes(root, "pfetch");
     const dts = path.join(root, ".noofpi/doofpi.d.ts");
     expect(existsSync(dts)).toBe(true);
-    expect(readFileSync(dts, "utf8")).toContain(
+    const content = readFileSync(dts, "utf8");
+    expect(content).toContain(
       'import type * as server from "../server/doofpi"',
     );
+    expect(content).toContain("localRoutes: typeof server");
+    expect(content).toContain('defaultFetch: "pfetch"');
+    expect(content).not.toMatch(/\n\s+routes:/);
   });
 
   it("writes nothing without server/doofpi.ts", () => {

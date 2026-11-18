@@ -2,6 +2,17 @@
 
 All notable changes to noofpi are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-11-18
+
+### Added
+
+- `Register` in `noofpi/runtime` has separate `localRoutes` (`lfetch`) and `remoteRoutes` (`dfetch`, `pfetch`, `sfetch`) keys. `useDoofpi()` and `useDoofpiFetch()` type their client with the routes of its mode, taken from the `{ mode }` option or, without one, from the new `defaultFetch` key (the `doofpi.fetch` of the config). A key that is not registered falls back to `routes`.
+
+### Changed
+
+- `.noofpi/doofpi.d.ts` registers the `routes` export of `server/doofpi.ts` as `localRoutes` (plus `defaultFetch`) instead of `routes`, so it no longer clashes with `routes` registered in your own `env.d.ts`.
+- `useDoofpi()` and `useDoofpiFetch()` are overloaded. `useDoofpi<OtherRoutes>()` and `useDoofpiFetch<T, OtherRoutes>()` keep working.
+
 ## [1.1.2] - 2026-11-18
 
 ### Fixed

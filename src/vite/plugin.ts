@@ -97,7 +97,7 @@ export function noofpiPlugin(options: {
               `[noofpi] i18n locale "${locale}" has no file app/locales/${locale}.ts, it falls back to "${config.i18n.defaultLocale}"`,
             );
       }
-      writeDoofpiTypes(root);
+      writeDoofpiTypes(root, config.doofpi.fetch);
       writeRouteTypes(root);
       writeI18nTypes(root, config.i18n);
     },
