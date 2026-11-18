@@ -2,6 +2,12 @@
 
 All notable changes to noofpi are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.2] - 2026-11-18
+
+### Fixed
+
+- `useAsyncData`, `useDoofpiFetch` and page loaders keep the message of a doofpi API error (`DoofpiClientError`, e.g. `401 Invalid credentials`) when it happens during SSR, instead of replacing it with `Internal Server Error`. Other unexpected errors are still hidden.
+
 ## [1.1.1] - 2026-11-17
 
 ### Changed

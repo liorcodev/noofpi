@@ -76,6 +76,19 @@ describe("useAsyncData", () => {
     expect(payload.errors.k?.message).toBe("no such item");
   });
 
+  it("keeps the message and status of doofpi API errors", async () => {
+    const payload = state(true);
+    const failure = Object.assign(new Error("Invalid credentials"), {
+      name: "DoofpiClientError",
+      status: 401,
+    });
+    const html = await render(payload, () => Promise.reject(failure));
+    expect(html).toContain("error:Invalid credentials");
+    expect(payload.errors).toEqual({
+      k: { message: "Invalid credentials", status: 401 },
+    });
+  });
+
   it("hydrates from the payload in the browser without calling the handler", async () => {
     const handler = vi.fn(async () => "fresh");
     const html = await render(

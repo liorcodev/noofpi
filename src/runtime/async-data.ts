@@ -28,7 +28,11 @@ export interface AsyncData<T> {
   refresh: () => Promise<void>;
 }
 
-/** On the server only `createError()` messages are kept: any other error is an unexpected failure that must not reach the HTML */
+/** A doofpi API answered with an error status: its message was written for clients (matched by name, the module can be loaded twice) */
+const isDoofpiClientError = (error: unknown) =>
+  error instanceof Error && error.name === "DoofpiClientError";
+
+/** On the server only `createError()` and doofpi API error messages are kept: any other error is an unexpected failure that must not reach the HTML */
 export function toError(error: unknown, server = false): AsyncDataError {
   const { message, status } = (error ?? {}) as {
     message?: unknown;
@@ -36,7 +40,7 @@ export function toError(error: unknown, server = false): AsyncDataError {
   };
   return {
     message:
-      server && !isNoofpiError(error)
+      server && !isNoofpiError(error) && !isDoofpiClientError(error)
         ? "Internal Server Error"
         : typeof message === "string"
           ? message
