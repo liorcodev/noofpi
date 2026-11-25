@@ -3,17 +3,18 @@ import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { printBanner } from "../banner";
+import { localUrl, printBanner } from "../banner";
 import type { ResolvedNoofpiConfig } from "../config";
 import { createHandler } from "../server/handler";
 import { sendWebResponse, serveStatic, toWebRequest } from "../server/node";
+import { openBrowser } from "../shortcuts";
 import type { ServerModule } from "../server/types";
 import { OUTPUT_DIR } from "./config";
 
 export async function startProd(
   root: string,
   config: ResolvedNoofpiConfig,
-  overrides: { port?: number; host?: string },
+  overrides: { port?: number; host?: string; open?: boolean },
 ) {
   const startedAt = performance.now();
   const outDir = path.join(root, OUTPUT_DIR);
@@ -44,5 +45,6 @@ export async function startProd(
   });
   await new Promise<void>((resolve) => server.listen(port, host, resolve));
   printBanner({ mode: "production", host, port, startedAt });
+  if (overrides.open) openBrowser(localUrl(host, port));
   return server;
 }

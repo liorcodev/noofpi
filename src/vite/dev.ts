@@ -3,7 +3,7 @@ import path from "node:path";
 import { createServer as createViteServer, normalizePath } from "vite";
 import { localUrl, printBanner } from "../banner";
 import type { ResolvedNoofpiConfig } from "../config";
-import { bindShortcuts } from "../shortcuts";
+import { bindShortcuts, openBrowser } from "../shortcuts";
 import { createHandler } from "../server/handler";
 import { sendWebResponse, toWebRequest } from "../server/node";
 import type { ServerModule } from "../server/types";
@@ -16,7 +16,7 @@ import { htmlTemplate } from "./template";
 export async function startDev(
   root: string,
   config: ResolvedNoofpiConfig,
-  overrides: { port?: number; host?: string },
+  overrides: { port?: number; host?: string; open?: boolean },
 ) {
   const startedAt = performance.now();
   const port = overrides.port ?? config.devServer.port;
@@ -89,5 +89,6 @@ export async function startDev(
     });
   const shortcuts = bindShortcuts({ url: localUrl(host, port), close });
   printBanner({ mode: "development", host, port, startedAt, shortcuts });
+  if (overrides.open) openBrowser(localUrl(host, port));
   return { vite, httpServer, close };
 }

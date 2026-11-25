@@ -2,6 +2,21 @@
 
 All notable changes to noofpi are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `noofpi preview` builds, then runs the production build (`node`, `bun` and `docker` presets).
+- `noofpi prepare` generates the `.noofpi/` type declarations without starting a server, for a `postinstall` script.
+- `noofpi typecheck` runs `prepare`, then `vue-tsc --noEmit` (arguments after `--` go to vue-tsc).
+- `--open` opens the browser once `dev`, `start` or `preview` is ready.
+- `--help` / `-h` and `--version` / `-v`.
+
+### Changed
+
+- The CLI parses its options with `node:util`'s `parseArgs`: `--port=3000` works, a missing option value or an unknown option is an error, and an invalid `--port` is rejected instead of becoming `NaN`.
+- `noofpi --help` exits with code 0. An unknown command exits with code 1 and names the commands.
+
 ## [1.2.0] - 2026-11-18
 
 ### Added

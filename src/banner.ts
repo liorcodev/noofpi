@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
 import { networkInterfaces } from "node:os";
 import { version as viteVersion } from "vite";
+import { packageVersion } from "./version";
 
 const LOGO = ["█▄ █  █▀█  █▀█  █▀▀  █▀█  █", "█ ▀█  █▄█  █▄█  █▀   █▀▀  █"];
 
@@ -48,15 +48,6 @@ function gradient(text: string): string {
     out += `\x1b[38;2;${r};${g};${b}m${text[i]}`;
   }
   return out + "\x1b[39m";
-}
-
-function packageVersion(): string {
-  try {
-    const url = new URL("../package.json", import.meta.url);
-    return JSON.parse(readFileSync(url, "utf-8")).version as string;
-  } catch {
-    return "";
-  }
 }
 
 function networkAddresses(): string[] {
