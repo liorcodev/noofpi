@@ -17,6 +17,14 @@ export async function mount(): Promise<void> {
       config: publicConfig,
       middlewareFiles: Object.keys(routeMiddleware),
       requests: log,
+      app,
+      payload: {
+        data: payload.data,
+        errors: payload.errors,
+        state: payload.state,
+        locale: payload.locale,
+        error: payload.error,
+      },
     });
   }
   // A `createError()` thrown by a route middleware during the first navigation is shown as the error page

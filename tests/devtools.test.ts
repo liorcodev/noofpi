@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { describeRequest, inspectRoute } from "../src/runtime/devtools";
+import {
+  describePayload,
+  describeRequest,
+  inspectRoute,
+  listRoutes,
+} from "../src/runtime/devtools";
 
 const files = [
   "/app/middleware/auth.ts",
@@ -40,6 +45,47 @@ describe("inspectRoute", () => {
     expect(
       inspectRoute(route("/about", { layout: false }), config, files),
     ).toMatchObject({ layout: "none", fetch: "lfetch", rendering: "server" });
+  });
+});
+
+describe("listRoutes", () => {
+  it("reports every route sorted by path, resolved through the route rules", () => {
+    const routes = listRoutes(
+      [
+        { path: "/users/:id", meta: { middleware: ["auth"] } },
+        { path: "/admin", meta: {} },
+        { path: "/", meta: { layout: false } },
+      ] as any,
+      config,
+      files,
+    );
+    expect(routes.map((r) => r.path)).toEqual(["/", "/admin", "/users/:id"]);
+    expect(routes[0]).toMatchObject({ layout: "none", rendering: "server" });
+    expect(routes[1]).toMatchObject({ fetch: "pfetch", rendering: "client" });
+    expect(routes[2]!.middleware.filter((m) => m.scope === "named")).toEqual([
+      { name: "auth", scope: "named", missing: false },
+    ]);
+  });
+});
+
+describe("describePayload", () => {
+  it("sizes each entry and lists the largest first", () => {
+    const report = describePayload({
+      data: { small: 1, big: { list: [1, 2, 3, 4, 5] } },
+      errors: { failed: { message: "no" } },
+      state: { count: 2 },
+      locale: "fr",
+    });
+    expect(report.data.map((e) => e.key)).toEqual(["big", "small"]);
+    expect(report.data[1]).toMatchObject({ json: "1", bytes: 1 });
+    expect(report.locale).toBe("fr");
+    expect(report.error).toBeUndefined();
+    expect(report.bytes).toBe(
+      [...report.data, ...report.errors, ...report.state].reduce(
+        (sum, e) => sum + e.bytes,
+        0,
+      ),
+    );
   });
 });
 

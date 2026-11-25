@@ -7,6 +7,7 @@ import {
   type ImageSource,
   type ResolvedImages,
 } from "../images";
+import { importOptional } from "../optional";
 
 const IMAGE_QUERY = /^(.+\.(?:jpe?g|png|webp|avif))\?image$/i;
 
@@ -26,7 +27,11 @@ export async function processImage(
   images: ResolvedImages,
   options: { base: string; variants: boolean; emit: boolean },
 ): Promise<ProcessedImage> {
-  const { default: sharp } = await import("sharp");
+  const { default: sharp } = await importOptional(
+    () => import("sharp"),
+    ["sharp"],
+    "Importing an image with `?image`",
+  );
   const input = await readFile(file);
   const metadata = await sharp(input).metadata();
   // EXIF orientations 5-8 are rotated by a quarter turn

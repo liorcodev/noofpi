@@ -13,7 +13,7 @@ export async function buildApp(
   resolved: ResolvedNoofpiConfig,
   preset: BuildPreset = resolved.build.preset,
 ): Promise<void> {
-  const config = { ...resolved, build: { preset } };
+  const config = { ...resolved, build: { ...resolved.build, preset } };
   const isStatic = preset === "github-pages";
   if (isStatic) {
     // Static hosting only serves files: no server rendering and no local or proxied doofpi API

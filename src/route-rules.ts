@@ -42,6 +42,14 @@ function patternToRegExp(pattern: string): RegExp {
   return new RegExp(`^${source}/?$`, "i");
 }
 
+/** Whether a URL path matches a `routeRules`-style pattern */
+export function matchesRoutePattern(
+  pattern: string,
+  pathname: string,
+): boolean {
+  return patternToRegExp(pattern).test(pathname);
+}
+
 export function validateRouteRules(rules: RouteRules, ssr: boolean): void {
   for (const [pattern, rule] of Object.entries(rules)) {
     if (!pattern.startsWith("/"))

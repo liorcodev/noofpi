@@ -29,6 +29,13 @@ bun add noofpi doofpi
 
 Requires Node.js 20 or newer (or Bun). `doofpi` is a peer dependency (`>=1.3.1`).
 
+`tailwindcss`, `@tailwindcss/vite` and `sharp` are optional peer dependencies, install them when you use the feature:
+
+```sh
+bun add tailwindcss @tailwindcss/vite   # tailwind: true
+bun add sharp                           # importing images with ?image
+```
+
 ## CLI
 
 ```

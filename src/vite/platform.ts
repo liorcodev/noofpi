@@ -5,7 +5,11 @@ import { pathToFileURL } from "node:url";
 import { isCloudflarePreset } from "../build-preset";
 import type { ResolvedNoofpiConfig } from "../config";
 
-const WRANGLER_CONFIGS = ["wrangler.json", "wrangler.jsonc", "wrangler.toml"];
+export const WRANGLER_CONFIGS = [
+  "wrangler.json",
+  "wrangler.jsonc",
+  "wrangler.toml",
+];
 
 export interface PlatformProxy {
   env: unknown;

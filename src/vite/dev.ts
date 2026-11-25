@@ -11,6 +11,7 @@ import { resolveFonts } from "../fonts";
 import { createViteConfig } from "./config";
 import { DEV_ENTRY, resolveCss } from "./plugin";
 import { startPlatformProxy } from "./platform";
+import { collectDevErrors, recordDevError, withDevErrors } from "./dev-errors";
 import { htmlTemplate } from "./template";
 
 export async function startDev(
@@ -60,20 +61,23 @@ export async function startDev(
     onError: (error) => {
       if (error instanceof Error) vite.ssrFixStacktrace(error);
       console.error(error);
+      recordDevError(error);
     },
   });
 
   httpServer.on("request", (req, res) => {
     // Vite serves modules, assets and HMR; everything else is the noofpi server
     vite.middlewares(req, res, () => {
-      handler(toWebRequest(req), platform?.env).then(
-        (response) => sendWebResponse(res, response),
-        (error) => {
-          console.error(error);
-          res.statusCode = 500;
-          res.end("Internal Server Error");
-        },
-      );
+      collectDevErrors(() => handler(toWebRequest(req), platform?.env))
+        .then(({ result, errors }) => withDevErrors(result, errors))
+        .then(
+          (response) => sendWebResponse(res, response),
+          (error) => {
+            console.error(error);
+            res.statusCode = 500;
+            res.end("Internal Server Error");
+          },
+        );
     });
   });
 

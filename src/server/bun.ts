@@ -30,17 +30,20 @@ export async function serveBun(options: {
           options.publicDir,
           request.method,
           url.pathname,
+          Object.fromEntries(request.headers),
         );
         if (found) {
-          return new Response(
-            request.method === "HEAD" ? null : bun.file(found.file),
-            {
-              headers: {
-                ...found.headers,
-                "Content-Length": String(found.size),
-              },
-            },
-          );
+          let body: Blob | null = null;
+          if (request.method !== "HEAD" && found.body) {
+            const { file, start, end } = found.body;
+            body = bun.file(file);
+            if (start !== undefined && end !== undefined)
+              body = body.slice(start, end + 1);
+          }
+          return new Response(body, {
+            status: found.status,
+            headers: found.headers,
+          });
         }
         return await options.handler(request);
       } catch (error) {

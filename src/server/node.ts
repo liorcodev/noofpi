@@ -46,6 +46,11 @@ export async function sendWebResponse(
     res.end();
     return;
   }
+  // `pipeline` throws for a response whose client already disconnected
+  if (res.destroyed) {
+    await response.body.cancel().catch(ignoreStreamError);
+    return;
+  }
   pipeline(
     Readable.fromWeb(response.body as import("node:stream/web").ReadableStream),
     res,
@@ -66,13 +71,17 @@ export async function serveStatic(
     dir,
     req.method ?? "GET",
     req.url ?? "/",
+    req.headers,
   );
   if (!found) return false;
+  res.statusCode = found.status;
   for (const [name, value] of Object.entries(found.headers))
     res.setHeader(name, value);
-  res.setHeader("Content-Length", found.size);
-  if (req.method === "HEAD") res.end();
-  else pipeline(createReadStream(found.file), res, ignoreStreamError);
+  if (req.method === "HEAD" || !found.body || res.destroyed) res.end();
+  else {
+    const { file, start, end } = found.body;
+    pipeline(createReadStream(file, { start, end }), res, ignoreStreamError);
+  }
   return true;
 }
 

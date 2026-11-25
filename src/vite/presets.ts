@@ -1,11 +1,17 @@
-import { existsSync, readFileSync } from "node:fs";
+﻿import { existsSync, readFileSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { InlineConfig } from "vite";
 import { type BuildPreset } from "../build-preset";
 import type { ResolvedNoofpiConfig } from "../config";
 import { applyHead, resolveHead } from "../head";
+import { filePathToRoute } from "../runtime/routes";
+import { robotsTxt, sitemapRoutes, sitemapXml } from "../seo";
 import { SSR_OUTLET } from "../server/types";
+import { precompressDir } from "./compress";
+import { DOCKERIGNORE, dockerfile } from "./docker";
+import { scanPages } from "./layouts";
+import { readUserWranglerConfig, workerWranglerConfig } from "./wrangler";
 
 export const OUTPUT_DIR = ".output";
 
@@ -148,33 +154,25 @@ function workerName(root: string): string {
   return name || "noofpi-app";
 }
 
-function dockerfile(root: string, port: number): string {
-  const bun =
-    existsSync(path.join(root, "bun.lock")) ||
-    existsSync(path.join(root, "bun.lockb"));
-  if (bun) {
-    return `FROM oven/bun:1
-WORKDIR /app
-COPY package.json bun.lock* ./
-RUN bun install${existsSync(path.join(root, "bun.lock")) ? " --frozen-lockfile" : ""}
-COPY .output .output
-USER bun
-ENV NODE_ENV=production PORT=${port}
-EXPOSE ${port}
-CMD ["bun", ".output/server/start.mjs"]
-`;
+/** Writes `sitemap.xml` and `robots.txt` into the build unless disabled or the project's `public/` already has them */
+export async function writeSeoFiles(
+  root: string,
+  config: ResolvedNoofpiConfig,
+): Promise<void> {
+  const { seo } = config;
+  const publicDir = path.join(root, OUTPUT_DIR, "public");
+  const write = async (name: string, content: string) => {
+    if (!existsSync(path.join(publicDir, name)))
+      await writeFile(path.join(publicDir, name), content);
+  };
+  if (seo.sitemap && seo.siteUrl) {
+    const routes = sitemapRoutes(
+      Object.keys(scanPages(root, () => true)).map(filePathToRoute),
+      seo.exclude,
+    );
+    await write("sitemap.xml", sitemapXml(seo.siteUrl, routes));
   }
-  const lock = existsSync(path.join(root, "package-lock.json"));
-  return `FROM node:22-alpine
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN ${lock ? "npm ci" : "npm install"}
-COPY .output .output
-USER node
-ENV NODE_ENV=production PORT=${port}
-EXPOSE ${port}
-CMD ["node", ".output/server/start.mjs"]
-`;
+  if (seo.robots) await write("robots.txt", robotsTxt(seo));
 }
 
 /** Writes what a preset needs next to the build (deploy config, Dockerfile) and removes what it must not serve */
@@ -184,6 +182,7 @@ export async function finishPresetBuild(
   preset: BuildPreset,
 ): Promise<string> {
   const outDir = path.join(root, OUTPUT_DIR);
+  await writeSeoFiles(root, config);
   const json = (value: unknown) => JSON.stringify(value, null, 2) + "\n";
   switch (preset) {
     case "cloudflare-worker":
@@ -191,13 +190,9 @@ export async function finishPresetBuild(
       await rm(path.join(outDir, "public/index.html"), { force: true });
       await writeFile(
         path.join(outDir, "wrangler.json"),
-        json({
-          name: workerName(root),
-          main: "server/index.mjs",
-          compatibility_date: new Date().toISOString().slice(0, 10),
-          compatibility_flags: ["nodejs_compat"],
-          assets: { directory: "public" },
-        }),
+        json(
+          workerWranglerConfig(workerName(root), readUserWranglerConfig(root)),
+        ),
       );
       return "deploy with `wrangler deploy -c .output/wrangler.json`";
     case "cloudflare-pages":
@@ -221,15 +216,37 @@ export async function finishPresetBuild(
       return "publish `.output/public` to GitHub Pages (set `vite.base` to `/<repo>/` for project sites)";
     }
     case "docker":
+      await precompressDir(path.join(outDir, "public"));
       await mkdir(outDir, { recursive: true });
       await writeFile(
         path.join(outDir, "Dockerfile"),
-        dockerfile(root, config.devServer.port),
+        dockerfile({
+          bun:
+            existsSync(path.join(root, "bun.lock")) ||
+            existsSync(path.join(root, "bun.lockb")),
+          lock: existsSync(
+            path.join(
+              root,
+              existsSync(path.join(root, "bun.lock"))
+                ? "bun.lock"
+                : "package-lock.json",
+            ),
+          ),
+          port: config.devServer.port,
+          ...config.build.docker,
+        }),
+      );
+      // BuildKit reads `<Dockerfile>.dockerignore` before the project's own `.dockerignore`
+      await writeFile(
+        path.join(outDir, "Dockerfile.dockerignore"),
+        DOCKERIGNORE,
       );
       return "build with `docker build -f .output/Dockerfile -t my-app .`";
     case "bun":
+      await precompressDir(path.join(outDir, "public"));
       return "run with `bun .output/server/start.mjs`";
     default:
+      await precompressDir(path.join(outDir, "public"));
       return "run with `noofpi start` or `node .output/server/start.mjs`";
   }
 }

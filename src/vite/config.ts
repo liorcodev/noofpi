@@ -1,7 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import vue from "@vitejs/plugin-vue";
-import tailwindcss from "@tailwindcss/vite";
 import { mergeConfig, type InlineConfig } from "vite";
 import type { ResolvedNoofpiConfig } from "../config";
 import { fontThemePlugin, NO_FONTS, type FontAssets } from "../fonts";
@@ -14,6 +13,7 @@ import {
   type BuildKind,
 } from "./plugin";
 import { OUTPUT_DIR, serverBuildConfig } from "./presets";
+import { tailwindPlugin } from "./tailwind";
 
 export { OUTPUT_DIR };
 
@@ -32,7 +32,7 @@ export function createViteConfig(
       vue(),
       // Must come before Tailwind so the theme is in the stylesheet by the time Tailwind compiles it
       config.tailwind && fonts.theme ? fontThemePlugin(fonts.theme) : null,
-      config.tailwind ? tailwindcss() : null,
+      config.tailwind ? tailwindPlugin() : null,
       config.autoImports ? autoImportPlugins() : null,
       imagesPlugin(config.images),
       noofpiPlugin({ root, config, css: resolveCss(root, config, fonts) }),

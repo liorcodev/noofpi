@@ -4,6 +4,7 @@ export type { CspConfig, CspDirectiveName, CspDirectiveValue } from "./csp";
 export type { SecurityConfig, CsrfConfig } from "./security";
 export type { I18nConfig } from "./i18n";
 export type { HeadConfig, HeadInput, HeadTag } from "./head";
+export type { SeoConfig } from "./seo";
 export type { RouteRule, RouteRules } from "./route-rules";
 export type { ImagesConfig, ImageFormat } from "./images";
 export { FONT_PROVIDERS } from "./fonts/types";
