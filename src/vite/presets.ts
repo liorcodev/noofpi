@@ -51,8 +51,11 @@ export function presetEntryCode(
     case "cloudflare-pages":
       return [
         HANDLER,
-        // Pages serves static files through the ASSETS binding; everything else is a page or an API call
-        `const isFile = (request) => (request.method === 'GET' || request.method === 'HEAD') && /\\.[a-z0-9]+$/i.test(new URL(request.url).pathname);`,
+        // Pages serves static files through the ASSETS binding; everything else is a page or an API call.
+        // API and proxy paths end in the endpoint name (`/_noofpi/proxy/doofpi.me.getMe`), which looks like a file extension
+        `const apiRoot = mod.config.doofpi.root;`,
+        `const isApiPath = (pathname) => pathname.startsWith('/_noofpi/') || pathname === apiRoot || pathname.startsWith(apiRoot + '.') || pathname.startsWith(apiRoot + '/');`,
+        `const isFile = (request) => { const { pathname } = new URL(request.url); return (request.method === 'GET' || request.method === 'HEAD') && /\\.[a-z0-9]+$/i.test(pathname) && !isApiPath(pathname); };`,
         `export default { fetch: (request, env) => isFile(request) && env.ASSETS ? env.ASSETS.fetch(request) : handler(request, env) };`,
       ].join("\n");
     default:

@@ -4,6 +4,14 @@ All notable changes to noofpi are documented here. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-27
+
+### Fixed
+
+- The `cloudflare-pages` preset no longer sends API and proxy requests to the `ASSETS` binding when the endpoint name looks like a file extension (`/_noofpi/proxy/doofpi.me.getMe`). Paths under `/_noofpi/` and the `doofpi` root are always handled by the app.
+- A util in `app/utils` that is only used in a template is auto-imported (`vueTemplate: true`) instead of compiling to `_ctx.name` and being `undefined` at runtime.
+- A failed first navigation (a `createError()` from a route middleware) no longer hangs the page when the client awaits the locale or devtools before mounting: the navigation is observed right away, and vue-router never settles a later `isReady()`.
+
 ## [2.0.0] - 2026-11-25
 
 ### Added

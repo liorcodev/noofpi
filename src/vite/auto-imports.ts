@@ -52,6 +52,8 @@ export function autoImportPlugins(): PluginOption[] {
         "app/utils/*/index.{ts,js}",
       ],
       include: [/\.[jt]sx?$/, /\.vue$/, /\.vue\?vue/],
+      // Without it a util used only in a template compiles to `_ctx.name` and is undefined at runtime
+      vueTemplate: true,
       dts: ".noofpi/auto-imports.d.ts",
     }),
     Components({

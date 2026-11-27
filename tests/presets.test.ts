@@ -5,7 +5,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { resolveConfig } from "../src/config";
 import { DOCKERIGNORE, dockerfile } from "../src/vite/docker";
-import { finishPresetBuild } from "../src/vite/presets";
+import { finishPresetBuild, presetEntryCode } from "../src/vite/presets";
 import {
   DEFAULT_COMPATIBILITY_DATE,
   stripJsonc,
@@ -145,6 +145,39 @@ describe("workerWranglerConfig", () => {
       main: "server/index.mjs",
       assets: { binding: "ASSETS", directory: "public" },
     });
+  });
+});
+
+describe("cloudflare-pages entry", () => {
+  const fetchEntry = (url: string, method = "GET") => {
+    const code = presetEntryCode("cloudflare-pages", resolveConfig())
+      .split("\n")
+      .filter((line) => !line.startsWith("import "))
+      .join("\n")
+      .replace("export default", "return");
+    const handler = () => "handler";
+    const env = { ASSETS: { fetch: () => "asset" } };
+    const mod = { config: { doofpi: { root: "/doofpi" } } };
+    const entry = new Function("createHandler", "mod", "template", code)(
+      () => handler,
+      mod,
+      "",
+    ) as { fetch: (request: Request, env: unknown) => string };
+    return entry.fetch(new Request(url, { method }), env);
+  };
+
+  it("serves file-looking GETs from the assets", () => {
+    expect(fetchEntry("https://x.test/assets/app.js")).toBe("asset");
+    expect(fetchEntry("https://x.test/robots.txt", "HEAD")).toBe("asset");
+  });
+
+  it("sends doofpi API and proxy GETs to the handler although the endpoint looks like a file", () => {
+    expect(
+      fetchEntry("https://x.test/_noofpi/proxy/doofpi.workspace.me.getMe"),
+    ).toBe("handler");
+    expect(fetchEntry("https://x.test/doofpi.workspace.me.getMe")).toBe(
+      "handler",
+    );
   });
 });
 
